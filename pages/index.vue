@@ -1,8 +1,13 @@
 <template>
-  <div v-if="!isAuthenticated" class="min-h-screen flex items-center justify-center bg-gray-50">
+  <div v-if="authLoading" class="min-h-screen flex items-center justify-center bg-gray-50">
     <div class="text-center">
       <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
       <p class="text-gray-600">Загрузка...</p>
+    </div>
+  </div>
+  <div v-else-if="!isAuthenticated" class="min-h-screen flex items-center justify-center bg-gray-50">
+    <div class="text-center">
+      <p class="text-gray-600">Перенаправление на страницу входа...</p>
     </div>
   </div>
   <div v-else class="min-h-screen bg-gray-50">
@@ -314,7 +319,7 @@ import TaskForm from '~/components/task/TaskForm.vue'
 import ConfirmDialog from '~/components/common/ConfirmDialog.vue'
 import type { TaskWithRelations } from '~/types'
 
-const { user, isAuthenticated, logout } = useAuth()
+const { user, isAuthenticated, loading: authLoading, logout } = useAuth()
 const { tasks, pendingTasks, completedTasks, importantTasks, loading, fetchTasks, createTask, updateTask, deleteTask } = useTask()
 const { projects, fetchProjects } = useProject()
 
@@ -328,6 +333,9 @@ const taskToDelete = ref<string | null>(null)
 const showDeleteConfirm = ref(false)
 
 onMounted(async () => {
+  // Ждём завершения аутентификации
+  await nextTick()
+  
   if (isAuthenticated.value) {
     await Promise.all([
       fetchTasks(),
