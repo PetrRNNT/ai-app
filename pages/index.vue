@@ -1,5 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div v-if="!isAuthenticated" class="min-h-screen flex items-center justify-center bg-gray-50">
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+      <p class="text-gray-600">Загрузка...</p>
+    </div>
+  </div>
+  <div v-else class="min-h-screen bg-gray-50">
     <!-- Header -->
     <header class="bg-white shadow-sm border-b">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -152,7 +158,7 @@
                   <span
                     v-if="task.project"
                     class="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full font-medium"
-                    :style="{ 
+                    :style="{
                       backgroundColor: task.project.color + '20',
                       color: task.project.color || '#3B82F6'
                     }"
@@ -243,7 +249,7 @@
             class="input-base mb-4"
             rows="3"
           ></textarea>
-          
+
           <!-- Project Selection -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">Проект</label>
@@ -258,7 +264,7 @@
               </option>
             </select>
           </div>
-          
+
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-2">Приоритет</label>
             <select v-model="newTaskPriority" class="input-base">
@@ -308,11 +314,7 @@ import TaskForm from '~/components/task/TaskForm.vue'
 import ConfirmDialog from '~/components/common/ConfirmDialog.vue'
 import type { TaskWithRelations } from '~/types'
 
-definePageMeta({
-  middleware: ['auth'],
-})
-
-const { user, logout } = useAuth()
+const { user, isAuthenticated, logout } = useAuth()
 const { tasks, pendingTasks, completedTasks, importantTasks, loading, fetchTasks, createTask, updateTask, deleteTask } = useTask()
 const { projects, fetchProjects } = useProject()
 
@@ -326,10 +328,12 @@ const taskToDelete = ref<string | null>(null)
 const showDeleteConfirm = ref(false)
 
 onMounted(async () => {
-  await Promise.all([
-    fetchTasks(),
-    fetchProjects(),
-  ])
+  if (isAuthenticated.value) {
+    await Promise.all([
+      fetchTasks(),
+      fetchProjects(),
+    ])
+  }
 })
 
 const handleLogout = async () => {
