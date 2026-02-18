@@ -1,0 +1,11 @@
+# Замените example.com на ваш домен
+# Для локального тестирования без SSL используйте :3000 вместо домена
+
+todo-app.example.com {
+    reverse_proxy app:3000
+}
+
+# HTTP редирект (если нужно)
+:80 {
+    redir https://todo-app.example.com{uri} permanent
+}

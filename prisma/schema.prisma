@@ -1,0 +1,612 @@
+// Prisma Schema for Enterprise TodoList
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ПОЛЬЗОВАТЕЛИ И РОЛИ
+// ============================================
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String
+  avatar        String?
+  password      String
+  role          UserRole      @default(USER)
+  settings      UserSettings? @relation("UserSettings")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  projects      Project[]
+  tasks         Task[]
+  comments      Comment[]
+  timeEntries   TimeEntry[]
+  templates     Template[]
+  automations   Automation[]
+  activities    Activity[]
+  areas         Area[]
+  tags          Tag[]
+  savedFilters  SavedFilter[]
+  reminders     Reminder[]
+  attachments   Attachment[]
+
+  @@index([email])
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  EDITOR
+  USER
+  VIEWER
+}
+
+// ============================================
+// ЗОНЫ ОТВЕТСТВЕННОСТИ
+// ============================================
+
+model Area {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  color       String?
+  icon        String?
+  order       Int       @default(0)
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects    Project[]
+
+  @@index([userId])
+}
+
+// ============================================
+// ПРОЕКТЫ
+// ============================================
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  color       String?
+  icon        String?
+  status      ProjectStatus @default(ACTIVE)
+  startDate   DateTime?
+  endDate     DateTime?
+  order       Int           @default(0)
+  areaId      String?
+  userId      String
+  parentId    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  area        Area?         @relation(fields: [areaId], references: [id], onDelete: SetNull)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      Project?      @relation("ProjectHierarchy", fields: [parentId], references: [id])
+  children    Project[]     @relation("ProjectHierarchy")
+  sections    Section[]
+  tasks       Task[]
+  templates   Template[]
+
+  @@index([userId])
+  @@index([areaId])
+  @@index([parentId])
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  COMPLETED
+  ON_HOLD
+}
+
+// ============================================
+// РАЗДЕЛЫ ПРОЕКТОВ
+// ============================================
+
+model Section {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  order       Int       @default(0)
+  projectId   String
+  parentId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent      Section?  @relation("SectionHierarchy", fields: [parentId], references: [id])
+  children    Section[] @relation("SectionHierarchy")
+  tasks       Task[]
+
+  @@index([projectId])
+  @@index([parentId])
+}
+
+// ============================================
+// ЗАДАЧИ
+// ============================================
+
+model Task {
+  id              String       @id @default(cuid())
+  title           String
+  description     String?
+  status          TaskStatus   @default(NEW)
+  priority        Priority     @default(MEDIUM)
+  dueDate         DateTime?
+  startDate       DateTime?
+  completedAt     DateTime?
+  estimatedTime   Int?         // в минутах
+  actualTime      Int?         // в минутах
+  order           Int          @default(0)
+  isImportant     Boolean      @default(false)
+  isUrgent        Boolean      @default(false)
+  projectId       String?
+  sectionId       String?
+  userId          String
+  assigneeId      String?
+  parentId        String?
+  recurringId     String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  project         Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  section         Section?     @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent          Task?        @relation("TaskHierarchy", fields: [parentId], references: [id])
+  children        Task[]       @relation("TaskHierarchy")
+  recurring       RecurringPattern? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
+
+  tags            TaskTag[]
+  checklists      Checklist[]
+  comments        Comment[]
+  attachments     Attachment[]
+  reminders       Reminder[]
+  timeEntries     TimeEntry[]
+  dependencies    TaskDependency[] @relation("DependentTask")
+  dependents      TaskDependency[] @relation("BlockingTask")
+  links           TaskLink[]   @relation("SourceTask")
+  linkedBy        TaskLink[]   @relation("TargetTask")
+  activities      Activity[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([sectionId])
+  @@index([parentId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([deletedAt])
+}
+
+enum TaskStatus {
+  NEW
+  IN_PROGRESS
+  PAUSED
+  WAITING
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  NONE
+}
+
+// ============================================
+// ТЕГИ
+// ============================================
+
+model Tag {
+  id          String    @id @default(cuid())
+  name        String
+  color       String
+  icon        String?
+  parentId    String?
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  parent      Tag?      @relation("TagHierarchy", fields: [parentId], references: [id])
+  children    Tag[]     @relation("TagHierarchy")
+  tasks       TaskTag[]
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([name, userId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+model TaskTag {
+  taskId      String
+  tagId       String
+  createdAt   DateTime  @default(now())
+
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag         Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+  @@index([taskId])
+  @@index([tagId])
+}
+
+// ============================================
+// ЧЕК-ЛИСТЫ
+// ============================================
+
+model Checklist {
+  id          String    @id @default(cuid())
+  title       String
+  isCompleted Boolean   @default(false)
+  order       Int       @default(0)
+  taskId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+// ============================================
+// ПОВТОРЯЮЩИЕСЯ ЗАДАЧИ
+// ============================================
+
+model RecurringPattern {
+  id              String    @id @default(cuid())
+  type            RecurringType
+  cronExpression  String?
+  interval        Int?
+  frequency       String?   // daily, weekly, monthly, yearly
+  daysOfWeek      Json?     // [0,1,2,3,4,5,6]
+  dayOfMonth      Int?
+  monthOfYear     Int?
+  endDate         DateTime?
+  exceptions      Json?     // массив дат-исключений
+  nextOccurrence  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tasks           Task[]
+
+  @@index([nextOccurrence])
+}
+
+enum RecurringType {
+  CRON
+  INTERVAL
+  RELATIVE
+}
+
+// ============================================
+// ЗАВИСИМОСТИ ЗАДАЧ
+// ============================================
+
+model TaskDependency {
+  id              String         @id @default(cuid())
+  dependentTaskId String
+  blockingTaskId  String
+  type            DependencyType @default(FINISH_TO_START)
+  createdAt       DateTime       @default(now())
+
+  dependentTask   Task           @relation("DependentTask", fields: [dependentTaskId], references: [id], onDelete: Cascade)
+  blockingTask    Task           @relation("BlockingTask", fields: [blockingTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([dependentTaskId, blockingTaskId])
+  @@index([dependentTaskId])
+  @@index([blockingTaskId])
+}
+
+enum DependencyType {
+  FINISH_TO_START
+  START_TO_START
+  FINISH_TO_FINISH
+  START_TO_FINISH
+}
+
+// ============================================
+// СВЯЗИ МЕЖДУ ЗАДАЧАМИ
+// ============================================
+
+model TaskLink {
+  id          String     @id @default(cuid())
+  sourceId    String
+  targetId    String
+  type        LinkType   @default(RELATED)
+  createdAt   DateTime   @default(now())
+
+  source      Task       @relation("SourceTask", fields: [sourceId], references: [id], onDelete: Cascade)
+  target      Task       @relation("TargetTask", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId])
+  @@index([sourceId])
+  @@index([targetId])
+}
+
+enum LinkType {
+  RELATED
+  DUPLICATE
+  BLOCKS
+  BLOCKED_BY
+}
+
+// ============================================
+// КОММЕНТАРИИ
+// ============================================
+
+model Comment {
+  id          String    @id @default(cuid())
+  content     String
+  taskId      String
+  userId      String
+  parentId    String?
+  mentions    Json?     // массив userId
+  reactions   Json?     // {emoji: [userId]}
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
+  parent      Comment?  @relation("CommentThread", fields: [parentId], references: [id])
+  replies     Comment[] @relation("CommentThread")
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+// ============================================
+// ВЛОЖЕНИЯ
+// ============================================
+
+model Attachment {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  thumbnail    String?
+  taskId       String
+  uploadedBy   String
+  createdAt    DateTime @default(now())
+
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [uploadedBy], references: [id])
+
+  @@index([taskId])
+}
+
+// ============================================
+// НАПОМИНАНИЯ
+// ============================================
+
+model Reminder {
+  id          String       @id @default(cuid())
+  type        ReminderType
+  triggerAt   DateTime?
+  location    Json?        // {lat, lng, radius}
+  context     String?
+  condition   Json?
+  isTriggered Boolean      @default(false)
+  taskId      String
+  userId      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  task        Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([triggerAt])
+  @@index([isTriggered])
+}
+
+enum ReminderType {
+  TIME
+  LOCATION
+  CONTEXT
+  CONDITIONAL
+}
+
+// ============================================
+// УЧЁТ ВРЕМЕНИ
+// ============================================
+
+model TimeEntry {
+  id          String    @id @default(cuid())
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?      // в секундах
+  description String?
+  taskId      String
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([startTime])
+}
+
+// ============================================
+// ШАБЛОНЫ
+// ============================================
+
+model Template {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  type        TemplateType
+  content     Json         // структура проекта/задачи
+  variables   Json?        // переменные для подстановки
+  projectId   String?
+  userId      String
+  isPublic    Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+}
+
+enum TemplateType {
+  PROJECT
+  TASK
+  WORKFLOW
+}
+
+// ============================================
+// АВТОМАТИЗАЦИЯ
+// ============================================
+
+model Automation {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  trigger     Json      // условия срабатывания
+  actions     Json      // действия
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastRun     DateTime?
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+// ============================================
+// ИНТЕГРАЦИИ
+// ============================================
+
+model Integration {
+  id          String          @id @default(cuid())
+  type        IntegrationType
+  name        String
+  config      Json            // настройки интеграции
+  credentials Json            // зашифрованные токены
+  isActive    Boolean         @default(true)
+  userId      String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  lastSync    DateTime?
+
+  @@index([userId])
+  @@index([type])
+}
+
+enum IntegrationType {
+  GOOGLE_CALENDAR
+  GMAIL
+  OUTLOOK
+  EXCHANGE
+  SLACK
+  TELEGRAM
+  DISCORD
+  WEBHOOK
+}
+
+// ============================================
+// ЖУРНАЛ АКТИВНОСТИ
+// ============================================
+
+model Activity {
+  id          String    @id @default(cuid())
+  type        ActivityType
+  action      String
+  entityType  String
+  entityId    String
+  metadata    Json?
+  userId      String
+  taskId      String?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task        Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([taskId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+enum ActivityType {
+  CREATE
+  UPDATE
+  DELETE
+  COMPLETE
+  ASSIGN
+  COMMENT
+  ATTACH
+  MOVE
+}
+
+// ============================================
+// СОХРАНЁННЫЕ ФИЛЬТРЫ
+// ============================================
+
+model SavedFilter {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  filters     Json
+  isDefault   Boolean   @default(false)
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================
+// НАСТРОЙКИ ПОЛЬЗОВАТЕЛЯ
+// ============================================
+
+model UserSettings {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  theme           String    @default("system")
+  language        String    @default("ru")
+  timezone        String    @default("Europe/Kaliningrad")
+  dateFormat      String    @default("DD.MM.YYYY")
+  timeFormat      String    @default("24h")
+  weekStart       Int       @default(1)
+  pomodoroWork    Int       @default(25)
+  pomodoroBreak   Int       @default(5)
+  pomodoroLong    Int       @default(15)
+  notifications   Json?
+  shortcuts       Json?
+  defaultView     String    @default("list")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade, name: "UserSettings")
+
+  @@index([userId])
+}

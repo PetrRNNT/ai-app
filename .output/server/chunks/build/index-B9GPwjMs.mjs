@@ -1,0 +1,115 @@
+import { _ as __nuxt_component_0 } from './nuxt-link-xjMrTn-4.mjs';
+import { defineComponent, ref, mergeProps, withCtx, createTextVNode, unref, computed, useSSRContext } from 'vue';
+import { ssrRenderAttrs, ssrRenderComponent, ssrInterpolate, ssrRenderAttr, ssrIncludeBooleanAttr, ssrLooseContain, ssrLooseEqual } from 'vue/server-renderer';
+import { u as useAuth } from './useAuth-BbwPNOMF.mjs';
+import { c as useSettingsStore } from './server.mjs';
+import '../_/nitro.mjs';
+import 'node:http';
+import 'node:https';
+import 'node:events';
+import 'node:buffer';
+import 'node:fs';
+import 'node:path';
+import 'node:crypto';
+import 'node:url';
+import '../routes/renderer.mjs';
+import 'vue-bundle-renderer/runtime';
+import 'unhead/server';
+import 'devalue';
+import 'unhead/utils';
+import 'pinia';
+import 'vue-router';
+
+function useSettings() {
+  const settingsStore = useSettingsStore();
+  const fetchSettings = async () => {
+    return settingsStore.fetchSettings();
+  };
+  const updateSettings = async (data) => {
+    return settingsStore.updateSettings(data);
+  };
+  return {
+    settings: computed(() => settingsStore.settings),
+    theme: computed(() => settingsStore.theme),
+    language: computed(() => settingsStore.language),
+    pomodoroSettings: computed(() => settingsStore.pomodoroSettings),
+    loading: computed(() => settingsStore.loading),
+    error: computed(() => settingsStore.error),
+    fetchSettings,
+    updateSettings
+  };
+}
+const _sfc_main = /* @__PURE__ */ defineComponent({
+  __name: "index",
+  __ssrInlineRender: true,
+  setup(__props) {
+    const { user } = useAuth();
+    const { loading } = useSettings();
+    const form = ref({
+      name: user.value?.name || "",
+      theme: "system",
+      language: "ru",
+      timezone: "Europe/Moscow",
+      dateFormat: "DD.MM.YYYY",
+      timeFormat: "24h",
+      weekStart: 1,
+      pomodoroWork: 25,
+      pomodoroBreak: 5,
+      pomodoroLong: 15
+    });
+    const saveSuccess = ref(false);
+    const saveError = ref("");
+    return (_ctx, _push, _parent, _attrs) => {
+      const _component_NuxtLink = __nuxt_component_0;
+      _push(`<div${ssrRenderAttrs(mergeProps({ class: "min-h-screen bg-gray-50" }, _attrs))}><header class="bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center space-x-4">`);
+      _push(ssrRenderComponent(_component_NuxtLink, {
+        to: "/",
+        class: "text-blue-600 hover:underline"
+      }, {
+        default: withCtx((_, _push2, _parent2, _scopeId) => {
+          if (_push2) {
+            _push2(`← Назад`);
+          } else {
+            return [
+              createTextVNode("← Назад")
+            ];
+          }
+        }),
+        _: 1
+      }, _parent));
+      _push(`<h1 class="text-xl font-bold text-gray-900">Настройки</h1></div><div class="flex items-center space-x-4">`);
+      if (unref(user)) {
+        _push(`<span class="text-sm text-gray-600">${ssrInterpolate(unref(user).name)}</span>`);
+      } else {
+        _push(`<!---->`);
+      }
+      _push(`<button class="text-sm text-gray-600 hover:text-gray-900"> Выйти </button></div></div></div></header><main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">`);
+      if (unref(loading)) {
+        _push(`<div class="flex justify-center items-center h-64"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>`);
+      } else {
+        _push(`<div class="space-y-6"><div class="card"><h2 class="text-lg font-semibold text-gray-900 mb-4">Профиль</h2><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1">Имя</label><input${ssrRenderAttr("value", unref(form).name)} type="text" class="input-base"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Email</label><input${ssrRenderAttr("value", unref(user)?.email)} type="email" class="input-base bg-gray-100" disabled></div></div></div><div class="card"><h2 class="text-lg font-semibold text-gray-900 mb-4">Внешний вид</h2><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-2">Тема</label><select class="input-base"><option value="system"${ssrIncludeBooleanAttr(Array.isArray(unref(form).theme) ? ssrLooseContain(unref(form).theme, "system") : ssrLooseEqual(unref(form).theme, "system")) ? " selected" : ""}>Системная</option><option value="light"${ssrIncludeBooleanAttr(Array.isArray(unref(form).theme) ? ssrLooseContain(unref(form).theme, "light") : ssrLooseEqual(unref(form).theme, "light")) ? " selected" : ""}>Светлая</option><option value="dark"${ssrIncludeBooleanAttr(Array.isArray(unref(form).theme) ? ssrLooseContain(unref(form).theme, "dark") : ssrLooseEqual(unref(form).theme, "dark")) ? " selected" : ""}>Тёмная</option></select></div></div></div><div class="card"><h2 class="text-lg font-semibold text-gray-900 mb-4">Региональные настройки</h2><div class="space-y-4"><div><label class="block text-sm font-medium text-gray-700 mb-1">Язык</label><select class="input-base"><option value="ru"${ssrIncludeBooleanAttr(Array.isArray(unref(form).language) ? ssrLooseContain(unref(form).language, "ru") : ssrLooseEqual(unref(form).language, "ru")) ? " selected" : ""}>Русский</option><option value="en"${ssrIncludeBooleanAttr(Array.isArray(unref(form).language) ? ssrLooseContain(unref(form).language, "en") : ssrLooseEqual(unref(form).language, "en")) ? " selected" : ""}>English</option></select></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Часовой пояс</label><select class="input-base"><option value="Europe/Kaliningrad"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Europe/Kaliningrad") : ssrLooseEqual(unref(form).timezone, "Europe/Kaliningrad")) ? " selected" : ""}>Калининград (UTC+2)</option><option value="Europe/Moscow"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Europe/Moscow") : ssrLooseEqual(unref(form).timezone, "Europe/Moscow")) ? " selected" : ""}>Москва (UTC+3)</option><option value="Europe/Samara"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Europe/Samara") : ssrLooseEqual(unref(form).timezone, "Europe/Samara")) ? " selected" : ""}>Самара (UTC+4)</option><option value="Asia/Yekaterinburg"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Asia/Yekaterinburg") : ssrLooseEqual(unref(form).timezone, "Asia/Yekaterinburg")) ? " selected" : ""}>Екатеринбург (UTC+5)</option><option value="Asia/Omsk"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Asia/Omsk") : ssrLooseEqual(unref(form).timezone, "Asia/Omsk")) ? " selected" : ""}>Омск (UTC+6)</option><option value="Asia/Krasnoyarsk"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Asia/Krasnoyarsk") : ssrLooseEqual(unref(form).timezone, "Asia/Krasnoyarsk")) ? " selected" : ""}>Красноярск (UTC+7)</option><option value="Asia/Irkutsk"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Asia/Irkutsk") : ssrLooseEqual(unref(form).timezone, "Asia/Irkutsk")) ? " selected" : ""}>Иркутск (UTC+8)</option><option value="Asia/Yakutsk"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Asia/Yakutsk") : ssrLooseEqual(unref(form).timezone, "Asia/Yakutsk")) ? " selected" : ""}>Якутск (UTC+9)</option><option value="Asia/Vladivostok"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Asia/Vladivostok") : ssrLooseEqual(unref(form).timezone, "Asia/Vladivostok")) ? " selected" : ""}>Владивосток (UTC+10)</option><option value="Asia/Magadan"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Asia/Magadan") : ssrLooseEqual(unref(form).timezone, "Asia/Magadan")) ? " selected" : ""}>Магадан (UTC+11)</option><option value="Asia/Kamchatka"${ssrIncludeBooleanAttr(Array.isArray(unref(form).timezone) ? ssrLooseContain(unref(form).timezone, "Asia/Kamchatka") : ssrLooseEqual(unref(form).timezone, "Asia/Kamchatka")) ? " selected" : ""}>Камчатка (UTC+12)</option></select></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Формат даты</label><select class="input-base"><option value="DD.MM.YYYY"${ssrIncludeBooleanAttr(Array.isArray(unref(form).dateFormat) ? ssrLooseContain(unref(form).dateFormat, "DD.MM.YYYY") : ssrLooseEqual(unref(form).dateFormat, "DD.MM.YYYY")) ? " selected" : ""}>ДД.ММ.ГГГГ</option><option value="MM/DD/YYYY"${ssrIncludeBooleanAttr(Array.isArray(unref(form).dateFormat) ? ssrLooseContain(unref(form).dateFormat, "MM/DD/YYYY") : ssrLooseEqual(unref(form).dateFormat, "MM/DD/YYYY")) ? " selected" : ""}>ММ/ДД/ГГГГ</option><option value="YYYY-MM-DD"${ssrIncludeBooleanAttr(Array.isArray(unref(form).dateFormat) ? ssrLooseContain(unref(form).dateFormat, "YYYY-MM-DD") : ssrLooseEqual(unref(form).dateFormat, "YYYY-MM-DD")) ? " selected" : ""}>ГГГГ-ММ-ДД</option></select></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Первый день недели</label><select class="input-base"><option${ssrRenderAttr("value", 1)}${ssrIncludeBooleanAttr(Array.isArray(unref(form).weekStart) ? ssrLooseContain(unref(form).weekStart, 1) : ssrLooseEqual(unref(form).weekStart, 1)) ? " selected" : ""}>Понедельник</option><option${ssrRenderAttr("value", 0)}${ssrIncludeBooleanAttr(Array.isArray(unref(form).weekStart) ? ssrLooseContain(unref(form).weekStart, 0) : ssrLooseEqual(unref(form).weekStart, 0)) ? " selected" : ""}>Воскресенье</option></select></div></div></div><div class="card"><h2 class="text-lg font-semibold text-gray-900 mb-4">Pomodoro таймер</h2><div class="grid grid-cols-3 gap-4"><div><label class="block text-sm font-medium text-gray-700 mb-1">Работа (мин)</label><input${ssrRenderAttr("value", unref(form).pomodoroWork)} type="number" min="1" max="60" class="input-base"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Короткий перерыв (мин)</label><input${ssrRenderAttr("value", unref(form).pomodoroBreak)} type="number" min="1" max="30" class="input-base"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">Длинный перерыв (мин)</label><input${ssrRenderAttr("value", unref(form).pomodoroLong)} type="number" min="1" max="60" class="input-base"></div></div></div>`);
+        if (unref(saveSuccess)) {
+          _push(`<div class="text-green-600 text-sm bg-green-50 p-3 rounded"> Настройки сохранены </div>`);
+        } else {
+          _push(`<!---->`);
+        }
+        if (unref(saveError)) {
+          _push(`<div class="text-red-600 text-sm bg-red-50 p-3 rounded">${ssrInterpolate(unref(saveError))}</div>`);
+        } else {
+          _push(`<!---->`);
+        }
+        _push(`</div>`);
+      }
+      _push(`</main></div>`);
+    };
+  }
+});
+const _sfc_setup = _sfc_main.setup;
+_sfc_main.setup = (props, ctx) => {
+  const ssrContext = useSSRContext();
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("pages/settings/index.vue");
+  return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
+};
+
+export { _sfc_main as default };
+//# sourceMappingURL=index-B9GPwjMs.mjs.map

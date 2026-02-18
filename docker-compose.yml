@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Nuxt Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo-app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/prisma/prod.db
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+    volumes:
+      - todo-db:/app/prisma
+    networks:
+      - todo-network
+    depends_on:
+      - caddy
+
+  # Caddy - Reverse Proxy with SSL
+  caddy:
+    image: caddy:2-alpine
+    container_name: todo-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - todo-network
+    depends_on:
+      - app
+
+volumes:
+  todo-db:
+    name: todo-app-database
+  caddy_data:
+    name: todo-caddy-data
+  caddy_config:
+    name: todo-caddy-config
+
+networks:
+  todo-network:
+    name: todo-app-network
+    driver: bridge

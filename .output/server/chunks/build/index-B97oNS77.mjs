@@ -1,0 +1,240 @@
+import { _ as __nuxt_component_0 } from './nuxt-link-xjMrTn-4.mjs';
+import { defineComponent, mergeProps, withCtx, createTextVNode, unref, ref, computed, useSSRContext } from 'vue';
+import { ssrRenderAttrs, ssrRenderComponent, ssrInterpolate, ssrRenderList, ssrRenderClass, ssrRenderStyle, ssrRenderAttr } from 'vue/server-renderer';
+import { defineStore } from 'pinia';
+import { u as useAuth } from './useAuth-BbwPNOMF.mjs';
+import '../_/nitro.mjs';
+import 'node:http';
+import 'node:https';
+import 'node:events';
+import 'node:buffer';
+import 'node:fs';
+import 'node:path';
+import 'node:crypto';
+import 'node:url';
+import './server.mjs';
+import '../routes/renderer.mjs';
+import 'vue-bundle-renderer/runtime';
+import 'unhead/server';
+import 'devalue';
+import 'unhead/utils';
+import 'vue-router';
+
+const usePomodoroStore = defineStore("pomodoro", {
+  state: () => ({
+    isRunning: false,
+    mode: "work",
+    timeLeft: 25 * 60,
+    workDuration: 25 * 60,
+    shortBreakDuration: 5 * 60,
+    longBreakDuration: 15 * 60,
+    completedPomodoros: 0,
+    autoStartBreaks: false,
+    autoStartPomodoros: false
+  }),
+  getters: {
+    formattedTime: (state) => {
+      const minutes = Math.floor(state.timeLeft / 60);
+      const seconds = state.timeLeft % 60;
+      return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    },
+    progress: (state) => {
+      const total = state.mode === "work" ? state.workDuration : state.mode === "shortBreak" ? state.shortBreakDuration : state.longBreakDuration;
+      return (total - state.timeLeft) / total * 100;
+    }
+  },
+  actions: {
+    start() {
+      this.isRunning = true;
+    },
+    pause() {
+      this.isRunning = false;
+    },
+    reset() {
+      this.isRunning = false;
+      this.timeLeft = this.getCurrentDuration();
+    },
+    getCurrentDuration() {
+      switch (this.mode) {
+        case "work":
+          return this.workDuration;
+        case "shortBreak":
+          return this.shortBreakDuration;
+        case "longBreak":
+          return this.longBreakDuration;
+        default:
+          return this.workDuration;
+      }
+    },
+    setMode(mode) {
+      this.mode = mode;
+      this.timeLeft = this.getCurrentDuration();
+      this.isRunning = false;
+    },
+    setDurations(work, shortBreak, longBreak) {
+      this.workDuration = work * 60;
+      this.shortBreakDuration = shortBreak * 60;
+      this.longBreakDuration = longBreak * 60;
+      this.timeLeft = this.getCurrentDuration();
+    },
+    tick() {
+      if (this.timeLeft > 0) {
+        this.timeLeft--;
+      } else {
+        this.complete();
+      }
+    },
+    complete() {
+      if (this.mode === "work") {
+        this.completedPomodoros++;
+        if (this.completedPomodoros % 4 === 0) {
+          this.setMode("longBreak");
+          if (this.autoStartBreaks) this.start();
+        } else {
+          this.setMode("shortBreak");
+          if (this.autoStartBreaks) this.start();
+        }
+      } else {
+        this.setMode("work");
+        if (this.autoStartPomodoros) this.start();
+      }
+    }
+  }
+});
+const intervalError = "[nuxt] `setInterval` should not be used on the server. Consider wrapping it with an `onNuxtReady`, `onBeforeMount` or `onMounted` lifecycle hook, or ensure you only call it in the browser by checking `false`.";
+const setInterval = (() => {
+  console.error(intervalError);
+});
+function usePomodoro() {
+  const pomodoroStore = usePomodoroStore();
+  let intervalId = null;
+  const startTimer = () => {
+    pomodoroStore.start();
+    intervalId = setInterval();
+  };
+  const pauseTimer = () => {
+    pomodoroStore.pause();
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+  const resetTimer = () => {
+    pomodoroStore.reset();
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+  const setMode = (mode) => {
+    pomodoroStore.setMode(mode);
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+  const setDurations = (work, shortBreak, longBreak) => {
+    pomodoroStore.setDurations(work, shortBreak, longBreak);
+  };
+  return {
+    isRunning: computed(() => pomodoroStore.isRunning),
+    mode: computed(() => pomodoroStore.mode),
+    timeLeft: computed(() => pomodoroStore.timeLeft),
+    formattedTime: computed(() => pomodoroStore.formattedTime),
+    progress: computed(() => pomodoroStore.progress),
+    completedPomodoros: computed(() => pomodoroStore.completedPomodoros),
+    startTimer,
+    pauseTimer,
+    resetTimer,
+    setMode,
+    setDurations
+  };
+}
+const _sfc_main$1 = /* @__PURE__ */ defineComponent({
+  __name: "PomodoroTimer",
+  __ssrInlineRender: true,
+  setup(__props) {
+    const {
+      isRunning,
+      mode,
+      formattedTime,
+      progress,
+      completedPomodoros
+    } = usePomodoro();
+    const modes = [
+      { id: "work", label: "Работа" },
+      { id: "shortBreak", label: "Перерыв" },
+      { id: "longBreak", label: "Отдых" }
+    ];
+    const workDuration = ref(25);
+    const shortBreakDuration = ref(5);
+    const longBreakDuration = ref(15);
+    return (_ctx, _push, _parent, _attrs) => {
+      _push(`<div${ssrRenderAttrs(mergeProps({ class: "card max-w-md mx-auto" }, _attrs))}><h2 class="text-2xl font-bold text-center text-gray-900 mb-6">Pomodoro Таймер</h2><div class="flex justify-center gap-2 mb-6"><!--[-->`);
+      ssrRenderList(modes, (modeOption) => {
+        _push(`<button class="${ssrRenderClass([
+          "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+          unref(mode) === modeOption.id ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+        ])}">${ssrInterpolate(modeOption.label)}</button>`);
+      });
+      _push(`<!--]--></div><div class="text-center mb-6"><div class="text-7xl font-bold text-gray-900 mb-4 font-mono">${ssrInterpolate(unref(formattedTime))}</div><div class="w-full bg-gray-200 rounded-full h-2 mb-6"><div class="${ssrRenderClass([unref(mode) === "work" ? "bg-blue-600" : unref(mode) === "shortBreak" ? "bg-green-600" : "bg-purple-600", "h-2 rounded-full transition-all duration-1000"])}" style="${ssrRenderStyle({ width: `${unref(progress)}%` })}"></div></div><div class="flex justify-center gap-4">`);
+      if (!unref(isRunning)) {
+        _push(`<button class="btn-primary px-8 py-3 text-lg"> ▶️ Старт </button>`);
+      } else {
+        _push(`<button class="btn-secondary px-8 py-3 text-lg"> ⏸️ Пауза </button>`);
+      }
+      _push(`<button class="btn-secondary px-8 py-3 text-lg"> 🔄 Сброс </button></div></div><div class="border-t pt-4"><div class="text-center"><p class="text-sm text-gray-600">Завершено помодоро</p><p class="text-2xl font-bold text-blue-600">${ssrInterpolate(unref(completedPomodoros))}</p></div></div><div class="border-t mt-4 pt-4"><details class="text-sm"><summary class="cursor-pointer text-gray-600 hover:text-gray-900"> ⚙️ Настройки </summary><div class="mt-4 space-y-3"><div class="flex items-center justify-between"><label class="text-gray-700">Работа (мин)</label><input${ssrRenderAttr("value", unref(workDuration))} type="number" min="1" max="60" class="w-20 px-2 py-1 border rounded text-center"></div><div class="flex items-center justify-between"><label class="text-gray-700">Короткий перерыв (мин)</label><input${ssrRenderAttr("value", unref(shortBreakDuration))} type="number" min="1" max="30" class="w-20 px-2 py-1 border rounded text-center"></div><div class="flex items-center justify-between"><label class="text-gray-700">Длинный перерыв (мин)</label><input${ssrRenderAttr("value", unref(longBreakDuration))} type="number" min="1" max="60" class="w-20 px-2 py-1 border rounded text-center"></div></div></details></div></div>`);
+    };
+  }
+});
+const _sfc_setup$1 = _sfc_main$1.setup;
+_sfc_main$1.setup = (props, ctx) => {
+  const ssrContext = useSSRContext();
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("components/common/PomodoroTimer.vue");
+  return _sfc_setup$1 ? _sfc_setup$1(props, ctx) : void 0;
+};
+const PomodoroTimer = Object.assign(_sfc_main$1, { __name: "CommonPomodoroTimer" });
+const _sfc_main = /* @__PURE__ */ defineComponent({
+  __name: "index",
+  __ssrInlineRender: true,
+  setup(__props) {
+    const { user } = useAuth();
+    return (_ctx, _push, _parent, _attrs) => {
+      const _component_NuxtLink = __nuxt_component_0;
+      _push(`<div${ssrRenderAttrs(mergeProps({ class: "min-h-screen bg-gray-50" }, _attrs))}><header class="bg-white shadow-sm border-b"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div class="flex justify-between items-center h-16"><div class="flex items-center space-x-4">`);
+      _push(ssrRenderComponent(_component_NuxtLink, {
+        to: "/",
+        class: "text-blue-600 hover:underline"
+      }, {
+        default: withCtx((_, _push2, _parent2, _scopeId) => {
+          if (_push2) {
+            _push2(`← Назад`);
+          } else {
+            return [
+              createTextVNode("← Назад")
+            ];
+          }
+        }),
+        _: 1
+      }, _parent));
+      _push(`<h1 class="text-xl font-bold text-gray-900">Pomodoro</h1></div><div class="flex items-center space-x-4">`);
+      if (unref(user)) {
+        _push(`<span class="text-sm text-gray-600">${ssrInterpolate(unref(user).name)}</span>`);
+      } else {
+        _push(`<!---->`);
+      }
+      _push(`<button class="text-sm text-gray-600 hover:text-gray-900"> Выйти </button></div></div></div></header><main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">`);
+      _push(ssrRenderComponent(PomodoroTimer, null, null, _parent));
+      _push(`</main></div>`);
+    };
+  }
+});
+const _sfc_setup = _sfc_main.setup;
+_sfc_main.setup = (props, ctx) => {
+  const ssrContext = useSSRContext();
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("pages/pomodoro/index.vue");
+  return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
+};
+
+export { _sfc_main as default };
+//# sourceMappingURL=index-B97oNS77.mjs.map

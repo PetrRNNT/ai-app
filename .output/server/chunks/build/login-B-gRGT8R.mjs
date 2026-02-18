@@ -1,0 +1,71 @@
+import { _ as __nuxt_component_0 } from './nuxt-link-xjMrTn-4.mjs';
+import { defineComponent, ref, mergeProps, unref, withCtx, createTextVNode, useSSRContext } from 'vue';
+import { ssrRenderAttrs, ssrRenderAttr, ssrInterpolate, ssrIncludeBooleanAttr, ssrRenderComponent } from 'vue/server-renderer';
+import { u as useAuth } from './useAuth-BbwPNOMF.mjs';
+import { a as useRouter } from './server.mjs';
+import { _ as _export_sfc } from './_plugin-vue_export-helper-1tPrXgE0.mjs';
+import '../_/nitro.mjs';
+import 'node:http';
+import 'node:https';
+import 'node:events';
+import 'node:buffer';
+import 'node:fs';
+import 'node:path';
+import 'node:crypto';
+import 'node:url';
+import '../routes/renderer.mjs';
+import 'vue-bundle-renderer/runtime';
+import 'unhead/server';
+import 'devalue';
+import 'unhead/utils';
+import 'pinia';
+import 'vue-router';
+
+const _sfc_main = /* @__PURE__ */ defineComponent({
+  __name: "login",
+  __ssrInlineRender: true,
+  setup(__props) {
+    const email = ref("");
+    const password = ref("");
+    const error = ref("");
+    const loading = ref(false);
+    useAuth();
+    useRouter();
+    return (_ctx, _push, _parent, _attrs) => {
+      const _component_NuxtLink = __nuxt_component_0;
+      _push(`<div${ssrRenderAttrs(mergeProps({ class: "login-page" }, _attrs))} data-v-00a57119><div class="login-container" data-v-00a57119><div class="max-w-md w-full space-y-8" data-v-00a57119><div class="text-center" data-v-00a57119><h1 class="text-4xl font-bold text-gray-900" data-v-00a57119>Enterprise TodoList</h1><p class="text-gray-600 mt-2" data-v-00a57119>Войдите в свой аккаунт</p></div><div class="bg-white rounded-lg shadow-xl p-8" data-v-00a57119><form class="space-y-6" data-v-00a57119><div data-v-00a57119><label for="email" class="block text-sm font-medium text-gray-700 mb-2" data-v-00a57119> Email </label><input id="email"${ssrRenderAttr("value", unref(email))} type="email" required class="input-base" placeholder="you@example.com" data-v-00a57119></div><div data-v-00a57119><label for="password" class="block text-sm font-medium text-gray-700 mb-2" data-v-00a57119> Пароль </label><input id="password"${ssrRenderAttr("value", unref(password))} type="password" required class="input-base" placeholder="••••••••" data-v-00a57119></div>`);
+      if (unref(error)) {
+        _push(`<div class="text-red-600 text-sm bg-red-50 p-3 rounded" data-v-00a57119>${ssrInterpolate(unref(error))}</div>`);
+      } else {
+        _push(`<!---->`);
+      }
+      _push(`<button type="submit"${ssrIncludeBooleanAttr(unref(loading)) ? " disabled" : ""} class="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed" data-v-00a57119>${ssrInterpolate(unref(loading) ? "Вход..." : "Войти")}</button></form><div class="mt-6 text-center" data-v-00a57119><p class="text-sm text-gray-600" data-v-00a57119> Нет аккаунта? `);
+      _push(ssrRenderComponent(_component_NuxtLink, {
+        to: "/register",
+        class: "text-blue-600 hover:underline"
+      }, {
+        default: withCtx((_, _push2, _parent2, _scopeId) => {
+          if (_push2) {
+            _push2(` Зарегистрироваться `);
+          } else {
+            return [
+              createTextVNode(" Зарегистрироваться ")
+            ];
+          }
+        }),
+        _: 1
+      }, _parent));
+      _push(`</p></div><div class="mt-6 p-4 bg-blue-50 rounded-lg" data-v-00a57119><p class="text-sm font-medium text-blue-900 mb-2" data-v-00a57119>Демо доступ:</p><p class="text-sm text-blue-700" data-v-00a57119>Email: admin@example.com</p><p class="text-sm text-blue-700" data-v-00a57119>Пароль: admin123</p></div></div></div></div></div>`);
+    };
+  }
+});
+const _sfc_setup = _sfc_main.setup;
+_sfc_main.setup = (props, ctx) => {
+  const ssrContext = useSSRContext();
+  (ssrContext.modules || (ssrContext.modules = /* @__PURE__ */ new Set())).add("pages/login.vue");
+  return _sfc_setup ? _sfc_setup(props, ctx) : void 0;
+};
+const login = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-00a57119"]]);
+
+export { login as default };
+//# sourceMappingURL=login-B-gRGT8R.mjs.map
