@@ -1,5 +1,11 @@
 <template>
-  <NuxtLayout>
+  <div v-if="isLoading" class="min-h-screen flex items-center justify-center bg-gray-50">
+    <div class="text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+      <p class="text-gray-600">Загрузка...</p>
+    </div>
+  </div>
+  <NuxtLayout v-else>
     <NuxtPage />
   </NuxtLayout>
 </template>
@@ -9,6 +15,8 @@
 const authStore = useAuthStore()
 const settingsStore = useSettingsStore()
 const timeTrackingStore = useTimeTrackingStore()
+
+const isLoading = ref(true)
 
 // Initialize auth and wait for user data
 await authStore.initAuth()
@@ -20,4 +28,6 @@ if (authStore.isAuthenticated && authStore.user) {
     timeTrackingStore.fetchActiveEntry(),
   ])
 }
+
+isLoading.value = false
 </script>
