@@ -1,1 +1,0 @@
-import{a0 as i,D as r,L as a}from"./BAtAs9mt.js";const s=i(t=>{const e=r();if(e.loading)return;if(t.meta.auth!==!1&&!e.isAuthenticated)return a("/login");if(e.isAuthenticated&&["login","register"].includes(t.name))return a("/")});export{s as default};
