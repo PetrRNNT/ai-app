@@ -32,4 +32,5 @@ ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV DATABASE_URL=file:/app/prisma/prod.db
 
-CMD ["sh", "-c", "npx prisma generate && npx prisma db push --accept-data-loss && node .output/server/index.mjs"]
+# Generate Prisma Client in .output/server where Nuxt looks for it
+CMD ["sh", "-c", "npx prisma generate --schema=./prisma/schema.prisma && cp -r node_modules/.prisma .output/server/node_modules/ && npx prisma db push --accept-data-loss --schema=./prisma/schema.prisma && node .output/server/index.mjs"]
