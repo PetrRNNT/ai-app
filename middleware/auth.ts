@@ -9,12 +9,9 @@ export default defineNuxtRouteMiddleware((to) => {
   // Check if route requires auth
   const requiresAuth = to.meta.auth !== false
 
-  // If still loading, redirect to current route (will re-check after loading)
+  // If still loading, wait and re-check
   if (authStore.loading) {
-    // Don't redirect on login/register pages while loading
-    if (!['login', 'register'].includes(to.name as string)) {
-      return
-    }
+    // Return nothing - let the page load, middleware will re-run
     return
   }
 
