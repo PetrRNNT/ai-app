@@ -10,11 +10,11 @@ const authStore = useAuthStore()
 const settingsStore = useSettingsStore()
 const timeTrackingStore = useTimeTrackingStore()
 
-// Initialize auth immediately
+// Initialize auth and wait for user data
 await authStore.initAuth()
 
 // Only fetch settings and time tracking if authenticated
-if (authStore.isAuthenticated && authStore.token) {
+if (authStore.isAuthenticated && authStore.user) {
   await Promise.all([
     settingsStore.fetchSettings(),
     timeTrackingStore.fetchActiveEntry(),

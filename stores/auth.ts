@@ -17,7 +17,7 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isLoggedIn: (state) => state.isAuthenticated,
+    isLoggedIn: (state) => state.isAuthenticated && state.user !== null,
     currentUser: (state) => state.user,
     userRole: (state) => state.user?.role,
     validToken: (state) => {
@@ -64,13 +64,17 @@ export const useAuthStore = defineStore('auth', {
           if (userStr) {
             try {
               this.user = JSON.parse(userStr)
-              this.isAuthenticated = true
-            } catch {}
+            } catch {
+              this.user = null
+            }
           }
+          // Fetch user from server to validate token
           await this.fetchUser()
         } else {
           this.loading = false
         }
+      } else {
+        this.loading = false
       }
     },
 
@@ -80,7 +84,7 @@ export const useAuthStore = defineStore('auth', {
           this.loading = false
           return
         }
-        
+
         const data = await $fetch('/api/auth/me', {
           headers: {
             Authorization: `Bearer ${this.token}`,
@@ -88,7 +92,8 @@ export const useAuthStore = defineStore('auth', {
         })
         this.user = data.data
         this.isAuthenticated = true
-      } catch {
+      } catch (error) {
+        // Token invalid or expired
         this.logout()
       } finally {
         this.loading = false

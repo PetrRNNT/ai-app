@@ -6,20 +6,24 @@ export default defineNuxtRouteMiddleware((to) => {
     return
   }
 
-  // Skip if auth is still initializing
-  if (authStore.loading) {
-    return
-  }
-
   // Check if route requires auth
   const requiresAuth = to.meta.auth !== false
 
-  if (requiresAuth && !authStore.isAuthenticated) {
+  // If still loading, redirect to current route (will re-check after loading)
+  if (authStore.loading) {
+    // Don't redirect on login/register pages while loading
+    if (!['login', 'register'].includes(to.name as string)) {
+      return
+    }
+    return
+  }
+
+  if (requiresAuth && !authStore.isLoggedIn) {
     return navigateTo('/login')
   }
 
   // Redirect to dashboard if already logged in and trying to access auth pages
-  if (authStore.isAuthenticated && ['login', 'register'].includes(to.name as string)) {
+  if (authStore.isLoggedIn && ['login', 'register'].includes(to.name as string)) {
     return navigateTo('/')
   }
 })
