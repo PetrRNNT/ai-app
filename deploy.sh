@@ -7,18 +7,22 @@ set -e
 
 echo "🚀 Starting deployment..."
 
-# Stop and remove containers
+# Force stop and remove containers (even if hanging)
 echo "📦 Stopping containers..."
-docker compose down
+docker compose down --timeout 10 || docker compose kill || true
+docker rm -f todo-app todo-caddy 2>/dev/null || true
 
-# Clean up Docker cache
-echo "🧹 Cleaning Docker cache..."
-docker system prune -af --volumes --all
+# Clean up old images (optional, comment out to keep cache)
+echo "🧹 Cleaning old images..."
+docker image rm todo-app:latest 2>/dev/null || true
 
-# Rebuild and start
-echo "🔨 Building image..."
-docker compose build --no-cache
+# Load pre-built image if exists
+if [ -f "todo-app.tar" ]; then
+    echo "📥 Loading image from todo-app.tar..."
+    docker load -i todo-app.tar
+fi
 
+# Start containers
 echo "🏃 Starting containers..."
 docker compose up -d
 

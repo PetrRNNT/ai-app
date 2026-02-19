@@ -3,9 +3,7 @@ version: '3.8'
 services:
   # Nuxt Application
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: todo-app:latest
     container_name: todo-app
     restart: unless-stopped
     environment:
