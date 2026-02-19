@@ -61,6 +61,7 @@ export const useAuthStore = defineStore('auth', {
         const userStr = localStorage.getItem('user')
         if (token) {
           this.token = token
+          // Восстанавливаем пользователя из localStorage для быстрого отображения
           if (userStr) {
             try {
               this.user = JSON.parse(userStr)
@@ -69,6 +70,7 @@ export const useAuthStore = defineStore('auth', {
             }
           }
           // Fetch user from server to validate token
+          // isAuthenticated будет установлен в fetchUser() только после успешного ответа
           await this.fetchUser()
         } else {
           this.loading = false
@@ -91,11 +93,14 @@ export const useAuthStore = defineStore('auth', {
           },
         })
         this.user = data.data
+        // Устанавливаем isAuthenticated ТОЛЬКО после успешного получения пользователя
         this.isAuthenticated = true
       } catch (error) {
-        // Token invalid or expired
+        // Token invalid or expired - logout сбросит isAuthenticated
         this.logout()
-      } finally {
+      }
+      // loading уже сброшен в logout() или будет сброшен здесь
+      if (this.loading) {
         this.loading = false
       }
     },

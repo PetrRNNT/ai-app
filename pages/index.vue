@@ -383,11 +383,15 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import TaskForm from '~/components/task/TaskForm.vue'
 import ConfirmDialog from '~/components/common/ConfirmDialog.vue'
 import type { TaskWithRelations } from '~/types'
 
-const { user, isAuthenticated, loading, logout } = useAuth()
+const authStore = useAuthStore()
+const { user, isAuthenticated, loading } = storeToRefs(authStore)
+const { logout } = authStore
+
 const { tasks, pendingTasks, completedTasks, importantTasks, loading: tasksLoading, fetchTasks, createTask, updateTask, deleteTask } = useTask()
 const { projects, fetchProjects } = useProject()
 
